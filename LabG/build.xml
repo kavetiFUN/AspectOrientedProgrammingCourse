@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="rmic" name="LAB2H">
+	<property name="projdir" value="."/>
+	<property name="caesar.home" value="${CAESAR_HOME}"/>
+	<property name="javart" value="${java.home}\lib\rt.jar"/>
+	
+	<property name="srcdir" value="${projdir}\src"/>
+	<property name="destdir" value="${projdir}\bin"/>
+	
+	<path id="caesar.classpath">		
+		<fileset dir="${caesar.home}">
+		    <include name="*.jar"/>
+	    </fileset>
+	</path>
+	
+	<path id="project.classpath">
+		<pathelement location="${caesar.home}\caesar-runtime.jar"/>
+		<pathelement location="${caesar.home}\aspectjrt.jar"/>		
+	</path>
+	
+	<path id="project.rmi.classpath">
+		<path refid="project.classpath"/>
+		<pathelement location="${destdir}"/>
+		<pathelement location="${javart}"/>
+	</path>
+	
+	<target name="paths">
+		<pathconvert refid="caesar.classpath" targetOS="windows" property="caesarclasspath"/>
+		<pathconvert refid="project.classpath" targetOS="windows" property="projclasspath"/>
+		<pathconvert refid="project.rmi.classpath" targetOS="windows" property="projrmiclasspath"/>
+		<echo message="Caesar CLASSPATH: ${caesarclasspath}"/>
+		<echo message="Project CLASSPATH: ${projclasspath}"/>
+		<echo message="Project CLASSPATH for RMI: ${projrmiclasspath}"/>
+	</target>
+	
+	<target name="props" depends="paths">
+		<echo message="dir: ${basedir}"/>
+		<echo message="classpath: ${java.class.path}"/>
+		<echo message="javahome: ${java.home}"/>
+		<echo message="caesarpath: ${caesarc.paths}"/>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${destdir}"/>
+		<mkdir dir="${destdir}"/>
+	</target>
+	
+	<target name="compile" depends="clean, paths">
+		<apply executable="java" parallel="true" verbose="true">
+			<env key="CLASSPATH" value="${caesarclasspath}"/>
+			<arg value="org.caesarj.compiler.Main"/>
+			<arg value="-d${destdir}"/>
+			<arg value="-C"/>
+			<arg value="${projclasspath}"/>
+			<fileset dir="${srcdir}" includes="**/*.java"/>			
+		</apply>
+	</target>
+	
+	<target name="rmic" depends="compile">
+    	<echo message="Compiling RMI classes..."/>
+		<java classname="org.caesarj.rmi.Compiler">
+			<classpath refid="caesar.classpath"/>
+			<arg value="-r"/>
+			<arg value="-d"/>
+			<arg value="${destdir}"/>
+			<arg value="-c"/>
+			<arg value="${projrmiclasspath}"/>
+			<arg value="company.Company"/>
+			<arg value="company.Department"/>
+			<arg value="company.Employee"/>
+			<arg value="companydisplay.CompanyHierarchyDisplay"/>
+			<arg value="companydisplay.AdjustedCompanyHierarchyDisplay"/>
+			<arg value="companydisplay.AngularCompanyHierarchyDisplay"/>
+			<arg value="companydisplay.AdjustedAngularCompanyHierarchyDisplay"/>
+		</java>
+		<echo message="RMI compilation completed!"></echo>
+	</target>
+</project>
